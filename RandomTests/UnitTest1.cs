@@ -17,5 +17,21 @@ namespace RandomTests
 
             Assert.Equal(expected, answer);
         }
+
+        [Fact]
+        public void ShouldCountDuplicatesWork()
+        {
+            var input = new byte[]
+            {
+                1, 2, 3, 4, 5,
+                1, 2, 3, 4, 5,
+                3, 3, 1, 2, 2, 4, 5, 3, 1
+            };
+
+            var expected = 2;
+
+            var output = Task8.Program.CountDuplicatesBlocks(input, 5);
+            Assert.Equal(expected, output);
+        }
     }
 }

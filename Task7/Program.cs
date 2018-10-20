@@ -9,7 +9,7 @@ namespace Task7
     {
         private static void Main(string[] args)
         {
-            var cipherText = new B64(File.ReadAllText(@"D:\VS17 projects\Cryptopals\Task7\7.txt")).GetBytes();
+            var cipherText = new B64(File.ReadAllText(@"D:\VS17 projects\Cryptopals\Task7\data.txt")).GetBytes();
             var key = new Readable("YELLOW SUBMARINE").GetASCIIBytes();
             Console.WriteLine(Decrypt(cipherText, key));
         }
