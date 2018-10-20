@@ -1,55 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using Utilities;
 
 namespace Task7
 {
-    internal class Program
+    public class Program
     {
-        private static readonly byte[] rconTable = new byte[10]
-        {
-            0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
-        };
+        private const int blockSize = 16;
+        private const int numberRounds = 10;
 
-        private static readonly byte[] galMul2 = new byte[256]
+        private static readonly byte[][] rcon = new byte[11][]
         {
-            0x00, 0x02, 0x04, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1a, 0x1c, 0x1e,
-            0x20, 0x22, 0x24, 0x26, 0x28, 0x2a, 0x2c, 0x2e, 0x30, 0x32, 0x34, 0x36, 0x38, 0x3a, 0x3c, 0x3e,
-            0x40, 0x42, 0x44, 0x46, 0x48, 0x4a, 0x4c, 0x4e, 0x50, 0x52, 0x54, 0x56, 0x58, 0x5a, 0x5c, 0x5e,
-            0x60, 0x62, 0x64, 0x66, 0x68, 0x6a, 0x6c, 0x6e, 0x70, 0x72, 0x74, 0x76, 0x78, 0x7a, 0x7c, 0x7e,
-            0x80, 0x82, 0x84, 0x86, 0x88, 0x8a, 0x8c, 0x8e, 0x90, 0x92, 0x94, 0x96, 0x98, 0x9a, 0x9c, 0x9e,
-            0xa0, 0xa2, 0xa4, 0xa6, 0xa8, 0xaa, 0xac, 0xae, 0xb0, 0xb2, 0xb4, 0xb6, 0xb8, 0xba, 0xbc, 0xbe,
-            0xc0, 0xc2, 0xc4, 0xc6, 0xc8, 0xca, 0xcc, 0xce, 0xd0, 0xd2, 0xd4, 0xd6, 0xd8, 0xda, 0xdc, 0xde,
-            0xe0, 0xe2, 0xe4, 0xe6, 0xe8, 0xea, 0xec, 0xee, 0xf0, 0xf2, 0xf4, 0xf6, 0xf8, 0xfa, 0xfc, 0xfe,
-            0x1b, 0x19, 0x1f, 0x1d, 0x13, 0x11, 0x17, 0x15, 0x0b, 0x09, 0x0f, 0x0d, 0x03, 0x01, 0x07, 0x05,
-            0x3b, 0x39, 0x3f, 0x3d, 0x33, 0x31, 0x37, 0x35, 0x2b, 0x29, 0x2f, 0x2d, 0x23, 0x21, 0x27, 0x25,
-            0x5b, 0x59, 0x5f, 0x5d, 0x53, 0x51, 0x57, 0x55, 0x4b, 0x49, 0x4f, 0x4d, 0x43, 0x41, 0x47, 0x45,
-            0x7b, 0x79, 0x7f, 0x7d, 0x73, 0x71, 0x77, 0x75, 0x6b, 0x69, 0x6f, 0x6d, 0x63, 0x61, 0x67, 0x65,
-            0x9b, 0x99, 0x9f, 0x9d, 0x93, 0x91, 0x97, 0x95, 0x8b, 0x89, 0x8f, 0x8d, 0x83, 0x81, 0x87, 0x85,
-            0xbb, 0xb9, 0xbf, 0xbd, 0xb3, 0xb1, 0xb7, 0xb5, 0xab, 0xa9, 0xaf, 0xad, 0xa3, 0xa1, 0xa7, 0xa5,
-            0xdb, 0xd9, 0xdf, 0xdd, 0xd3, 0xd1, 0xd7, 0xd5, 0xcb, 0xc9, 0xcf, 0xcd, 0xc3, 0xc1, 0xc7, 0xc5,
-            0xfb, 0xf9, 0xff, 0xfd, 0xf3, 0xf1, 0xf7, 0xf5, 0xeb, 0xe9, 0xef, 0xed, 0xe3, 0xe1, 0xe7, 0xe5
-        };
-
-        private static readonly byte[] galMul3 = new byte[256]
-        {
-            0x00, 0x03, 0x06, 0x05, 0x0c, 0x0f, 0x0a, 0x09, 0x18, 0x1b, 0x1e, 0x1d, 0x14, 0x17, 0x12, 0x11,
-            0x30, 0x33, 0x36, 0x35, 0x3c, 0x3f, 0x3a, 0x39, 0x28, 0x2b, 0x2e, 0x2d, 0x24, 0x27, 0x22, 0x21,
-            0x60, 0x63, 0x66, 0x65, 0x6c, 0x6f, 0x6a, 0x69, 0x78, 0x7b, 0x7e, 0x7d, 0x74, 0x77, 0x72, 0x71,
-            0x50, 0x53, 0x56, 0x55, 0x5c, 0x5f, 0x5a, 0x59, 0x48, 0x4b, 0x4e, 0x4d, 0x44, 0x47, 0x42, 0x41,
-            0xc0, 0xc3, 0xc6, 0xc5, 0xcc, 0xcf, 0xca, 0xc9, 0xd8, 0xdb, 0xde, 0xdd, 0xd4, 0xd7, 0xd2, 0xd1,
-            0xf0, 0xf3, 0xf6, 0xf5, 0xfc, 0xff, 0xfa, 0xf9, 0xe8, 0xeb, 0xee, 0xed, 0xe4, 0xe7, 0xe2, 0xe1,
-            0xa0, 0xa3, 0xa6, 0xa5, 0xac, 0xaf, 0xaa, 0xa9, 0xb8, 0xbb, 0xbe, 0xbd, 0xb4, 0xb7, 0xb2, 0xb1,
-            0x90, 0x93, 0x96, 0x95, 0x9c, 0x9f, 0x9a, 0x99, 0x88, 0x8b, 0x8e, 0x8d, 0x84, 0x87, 0x82, 0x81,
-            0x9b, 0x98, 0x9d, 0x9e, 0x97, 0x94, 0x91, 0x92, 0x83, 0x80, 0x85, 0x86, 0x8f, 0x8c, 0x89, 0x8a,
-            0xab, 0xa8, 0xad, 0xae, 0xa7, 0xa4, 0xa1, 0xa2, 0xb3, 0xb0, 0xb5, 0xb6, 0xbf, 0xbc, 0xb9, 0xba,
-            0xfb, 0xf8, 0xfd, 0xfe, 0xf7, 0xf4, 0xf1, 0xf2, 0xe3, 0xe0, 0xe5, 0xe6, 0xef, 0xec, 0xe9, 0xea,
-            0xcb, 0xc8, 0xcd, 0xce, 0xc7, 0xc4, 0xc1, 0xc2, 0xd3, 0xd0, 0xd5, 0xd6, 0xdf, 0xdc, 0xd9, 0xda,
-            0x5b, 0x58, 0x5d, 0x5e, 0x57, 0x54, 0x51, 0x52, 0x43, 0x40, 0x45, 0x46, 0x4f, 0x4c, 0x49, 0x4a,
-            0x6b, 0x68, 0x6d, 0x6e, 0x67, 0x64, 0x61, 0x62, 0x73, 0x70, 0x75, 0x76, 0x7f, 0x7c, 0x79, 0x7a,
-            0x3b, 0x38, 0x3d, 0x3e, 0x37, 0x34, 0x31, 0x32, 0x23, 0x20, 0x25, 0x26, 0x2f, 0x2c, 0x29, 0x2a,
-            0x0b, 0x08, 0x0d, 0x0e, 0x07, 0x04, 0x01, 0x02, 0x13, 0x10, 0x15, 0x16, 0x1f, 0x1c, 0x19, 0x1a
+            new byte[] {0x00, 0, 0, 0},
+            new byte[] {0x01, 0, 0, 0},
+            new byte[] {0x02, 0, 0, 0},
+            new byte[] {0x04, 0, 0, 0},
+            new byte[] {0x08, 0, 0, 0},
+            new byte[] {0x10, 0, 0, 0},
+            new byte[] {0x20, 0, 0, 0},
+            new byte[] {0x40, 0, 0, 0},
+            new byte[] {0x80, 0, 0, 0},
+            new byte[] {0x1b, 0, 0, 0},
+            new byte[] {0x36, 0, 0, 0}
         };
 
         private static readonly byte[] sBox = new byte[256]
@@ -70,29 +43,40 @@ namespace Task7
             0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a, //C
             0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e, //D
             0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf, //E
-            0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
+            0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16  //F
         };
 
         private static void Main(string[] args)
         {
-            const int blockSize = 16;
             //var text = new B64
             //    (File.ReadAllText(@"D:\VS17 projects\Cryptopals\Task7\data.txt")).GetBytes();
-            var text = new Readable("Dupa123").GetASCIIBytes();
-            var key = new Readable("YELLOW SUBMARINE");
+            var text = new Readable("0123456789ABCDEF").GetASCIIBytes();
+            var key = KeyExpansion(new Readable("ABCDEFGHIJKLMNOP").GetASCIIBytes());
+            //expected: 5A D4 2F 60 07 46 B1 01 FA 1C 7C 23 18 54 2C D6 CE 48 C2 1E D3 5A 40 FA CD 92 9A 1B F2 5F C5 95
             PadInput(ref text);
             var output = new List<byte>();
             for (var i = 0; i * blockSize < text.Length; i += blockSize)
             {
                 var block = text.AsSpan(i * blockSize, blockSize).ToArray();
-                AES(ref block, key.GetASCIIBytes());
-                output.AddRange(block);
+                output.AddRange(AES(block, key));
             }
 
-            Console.WriteLine(string.Join(' ', output.ToArray()));
+            Console.WriteLine(string.Join(' ', output.ToArray().Select(x => x.ToString("x2"))));
         }
 
-        private static void PadInput(ref byte[] text)
+        private static byte[] GetColumnMajor(byte[] b) //???
+        {
+            return new byte[16]
+            {
+                b[0x00], b[0x04], b[0x08], b[0x0c],
+                b[0x01], b[0x05], b[0x09], b[0x0d],
+                b[0x02], b[0x06], b[0x0a], b[0x0e],
+                b[0x03], b[0x07], b[0x0b], b[0x0f]
+
+            };
+        }
+
+        private static void PadInput(ref byte[] text) //???
         {
             var rem = 16 - text.Length % 16;
             if (rem == 16)
@@ -101,12 +85,12 @@ namespace Task7
             }
 
             var padded = new byte[text.Length + rem];
-            for (int i = 0; i < text.Length; i++)
+            for (var i = 0; i < text.Length; i++)
             {
                 padded[i] = text[i];
             }
 
-            for (int i = text.Length; i < padded.Length; i++)
+            for (var i = text.Length; i < padded.Length; i++)
             {
                 padded[i] = 0;
             }
@@ -114,150 +98,193 @@ namespace Task7
             text = padded;
         }
 
-        public static void AES(ref byte[] plaintext, byte[] key) //plaintext - 16 bytes
+        public static byte[] AES(byte[] plaintext, List<byte[]> expandedKey) //???
         {
-            const int rounds = 10;
-            var expandedKeys = new byte[176];
-            GetSubkeys(ref key, ref expandedKeys);
-            AddKey(ref plaintext, ref key);
-            for (var i = 0; i < rounds; i++)
+            plaintext = AddRoundKey(plaintext, expandedKey[0]);
+            for (var roundIndex = 0; roundIndex < numberRounds; roundIndex++)
             {
-                Round(ref plaintext, ref expandedKeys, i);
+                plaintext = Round(plaintext, roundIndex, expandedKey);
             }
+
+            return plaintext;
         }
 
-        private static void Round(ref byte[] text, ref byte[] expandedKey, int iteration)
+        public static List<byte[]> KeyExpansion(byte[] key)
         {
-            ByteSub(ref text);
-            ShiftRow(ref text);
-
-            if (iteration != 9) //9 is last
+            key = GetColumnMajor(key); //???
+            var N = 4;
+            var K = new List<byte[]>();
+            for (var i = 0; i < N; i++)
             {
-                MixCol(ref text);
-            }
-
-            expandedKey = expandedKey.AsSpan(16 * (iteration + 1)).ToArray();
-            AddKey(ref text, ref expandedKey);
-        }
-
-        private static void GetSubkeys(ref byte[] key, ref byte[] expanded)
-        {
-            for (var i = 0; i < 16; i++)
-            {
-                expanded[i] = key[i];
-            }
-
-            var bytesGenerated = 16;
-            var rconIteration = 1;
-            var temp = new byte[4];
-            while (bytesGenerated < 22)
-            {
-                for (var i = 0; i < 4; i++)
+                K.Add(new byte[4]
                 {
-                    temp[i] = expanded[i + bytesGenerated - 4];
-                }
+                    key[i * 4 + 0], key[i * 4 + 1],
+                    key[i * 4 + 2], key[i * 4 + 3]
+                });
+            }
 
-                if (bytesGenerated % 16 == 0)
+            var R = 11;
+            var W = new List<byte[]>(); //4-byte words, 176 bytes in total
+            for (var i = 0; i < 44; i++)
+            {
+                W.Add(new byte[4]);
+            }
+
+            byte[] RotWord(byte[] arr) => new byte[4] { arr[1], arr[2], arr[3], arr[0] };
+            byte[] SubWord(byte[] arr) => new byte[4] { sBox[arr[0]], sBox[arr[1]], sBox[arr[2]], sBox[arr[3]] };
+
+            for (var i = 0; i < 4 * R; i++)
+            {
+                if (i < N)
                 {
-                    GetSubkeyPart(ref temp, rconIteration++);
+                    W[i] = K[i];
                 }
-
-                for (var i = 0; i < 4; i++)
+                else if (i >= N && i % N == 0)
                 {
-                    expanded[bytesGenerated] = (byte)(expanded[bytesGenerated - 16] ^ temp[i]);
-                    bytesGenerated++;
+                    W[i] = W[i - N].XOr(RotWord(SubWord(W[i - 1]))).XOr(rcon[i / N]);
+                }
+                else if (i >= N && N > 6 && i % N == 4)
+                {
+                    W[i] = W[i - N].XOr(SubWord(W[i - 1]));
+                }
+                else
+                {
+                    W[i] = W[i - N].XOr(W[i - 1]);
                 }
             }
-        }
 
-        private static void GetSubkeyPart(ref byte[] key, int round)
-        {
-            //Rotating
-            var buffer = key[0];
-            key[0] = key[1];
-            key[1] = key[2];
-            key[2] = key[3];
-            key[3] = buffer;
-
-            //SBox
-            key[0] = sBox[key[0]];
-            key[1] = sBox[key[1]];
-            key[2] = sBox[key[2]];
-            key[3] = sBox[key[3]];
-
-            key[0] ^= rconTable[round];
-        }
-
-
-
-        private static void AddKey(ref byte[] text, ref byte[] key)
-        {
-            for (var i = 0; i < 16; i++)
+            var flattened = W.SelectMany(x => x).ToArray();
+            var resized = new List<byte[]>(); //each byte[] is 16 elements
+            for (var i = 0; i < R; i++)
             {
-                text[i] ^= key[i];
-            }
-        }
-
-        private static void MixCol(ref byte[] text)
-        {
-            var result = new byte[16];
-            for (var i = 0; i < 4; i++)
-            {
-                result[i * 4 + 0] = (byte)(galMul2[text[i * 4 + 0]] ^ galMul3[text[i * 4 + 1]] ^ text[i * 4 + 2] ^ text[i * 4 + 3]);
-                result[i * 4 + 1] = (byte)(text[i * 4 + 0] ^ galMul2[text[i * 4 + 1]] ^ galMul3[text[i * 4 + 2]] ^ text[i * 4 + 3]);
-                result[i * 4 + 2] = (byte)(text[i * 4 + 0] ^ text[i * 4 + 1] ^ galMul2[text[i * 4 + 2]] ^ galMul3[text[i * 4 + 3]]);
-                result[i * 4 + 3] = (byte)(galMul3[text[i * 4 + 0]] ^ text[i * 4 + 1] ^ text[i * 4 + 2] ^ galMul2[text[i * 4 + 3]]);
+                resized.Add(new byte[16]);
             }
 
-            for (var i = 0; i < 16; i++)
+            for (var i = 0; i < flattened.Length; i++)
             {
-                text[i] = result[i];
+                resized[i / 16][i % 16] = flattened[i];
             }
+
+            return resized;
         }
 
-        private static void ShiftRow(ref byte[] bytes)
+        private static byte[] AddRoundKey(byte[] text, byte[] roundKey) //???
         {
+            return text.XOr(roundKey);
+        }
+
+        private static byte[] Round(byte[] plaintext, int roundIndex, List<byte[]> expandedKey) //???
+        {
+            plaintext = SubBytes(plaintext);
+            plaintext = ShiftRows(plaintext);
+            if (roundIndex != 9)
+            {
+                plaintext = MixColumns(plaintext);
+            }
+
+            return AddRoundKey(plaintext, expandedKey[roundIndex + 1]);
+        } 
+
+        public static byte[] SubBytes(byte[] text)
+        {
+            return text.Select(x => sBox[x]).ToArray();
+        }
+
+        public static byte[] ShiftRows(byte[] text)
+        {
+            if (text.Length != 16)
+            {
+                throw new ArgumentException("Array of text must be exactly 16 bytes longs");
+            }
             /* Input
-             * B[00] B[04] B[08] B[12]
-             * B[01] B[05] B[09] B[13]
-             * B[02] B[06] B[10] B[14]
-             * B[03] B[07] B[11] B[15]
+             * B[00] B[01] B[02] B[03]
+             * B[04] B[05] B[06] B[07]
+             * B[08] B[09] B[10] B[11]
+             * B[12] B[13] B[14] B[15]
+             * Output
+             * B[00] B[01] B[02] B[03]
+             * B[05] B[06] B[07] B[04]
+             * B[10] B[11] B[08] B[09]
+             * B[15] B[12] B[13] B[14]
              */
 
-            /* Output
-             * B[00] B[04] B[08] B[12]
-             * B[05] B[09] B[13] B[01]
-             * B[10] B[14] B[02] B[06]
-             * B[15] B[03] B[07] B[11]
-             */
-            //1st untouched
-            //2nd
-            var buffer = bytes[1];
-            bytes[1] = bytes[5];
-            bytes[5] = bytes[9];
-            bytes[9] = bytes[13];
-            bytes[13] = buffer;
-            //3rd
-            buffer = bytes[2];
-            bytes[2] = bytes[10];
-            bytes[10] = buffer;
-            buffer = bytes[6];
-            bytes[6] = bytes[14];
-            bytes[14] = buffer;
-            //4th
-            buffer = bytes[15];
-            bytes[15] = bytes[11];
-            bytes[11] = bytes[7];
-            bytes[7] = bytes[3];
-            bytes[3] = buffer;
+            return new byte[16]
+            {
+                text[00], text[01], text[02], text[03],
+                text[05], text[06], text[07], text[04],
+                text[10], text[11], text[08], text[09],
+                text[15], text[12], text[13], text[14]
+            };
         }
 
-        private static void ByteSub(ref byte[] text)
+        public static byte[] MixColumns(byte[] input) //input is 16 bytes //???
         {
-            for (var i = 0; i < text.Length; i++)
+            var columns = new List<byte[]>();
+            for (int i = 0; i < 4; i++)
             {
-                text[i] = sBox[text[i]];
+                columns.Add(new byte[4] { input[00 + i], input[04 + i], input[08 + i], input[12 + i] });
+                //columns.Add(new byte[4] { input[00 + i * 4], input[01 + i * 4], input[02 + i * 4], input[03 + i * 4] });
             }
+
+            for (int i = 0; i < columns.Count; i++)
+            {
+                columns[i] = MixColumnsCore(columns[i]);
+            }
+
+            return columns.SelectMany(x => x).ToArray();
+        }
+
+        public static byte[] MixColumnsCore(byte[] input)
+        {
+            if (input.Length != 4)
+            {
+                throw new ArgumentException("Input array must be exactly 4 bytes long");
+            }
+
+            var output = new byte[4];
+            output[0] = (byte)(GalMul(input[0], 2) ^ GalMul(input[3], 1) ^ GalMul(input[2], 1) ^ GalMul(input[1], 3));
+            output[1] = (byte)(GalMul(input[1], 2) ^ GalMul(input[0], 1) ^ GalMul(input[3], 1) ^ GalMul(input[2], 3));
+            output[2] = (byte)(GalMul(input[2], 2) ^ GalMul(input[1], 1) ^ GalMul(input[0], 1) ^ GalMul(input[3], 3));
+            output[3] = (byte)(GalMul(input[3], 2) ^ GalMul(input[2], 1) ^ GalMul(input[1], 1) ^ GalMul(input[0], 3));
+            return output;
+        }
+
+        public static byte[] MixColumnsCoreInverse(byte[] input)
+        {
+            if (input.Length != 4)
+            {
+                throw new ArgumentException("Input array must be exactly 4 bytes long");
+            }
+
+            var output = new byte[4];
+            output[0] = (byte)(GalMul(input[0], 14) ^ GalMul(input[3], 9) ^ GalMul(input[2], 13) ^ GalMul(input[1], 11));
+            output[1] = (byte)(GalMul(input[1], 14) ^ GalMul(input[0], 9) ^ GalMul(input[3], 13) ^ GalMul(input[2], 11));
+            output[2] = (byte)(GalMul(input[2], 14) ^ GalMul(input[1], 9) ^ GalMul(input[0], 13) ^ GalMul(input[3], 11));
+            output[3] = (byte)(GalMul(input[3], 14) ^ GalMul(input[2], 9) ^ GalMul(input[1], 13) ^ GalMul(input[0], 11));
+            return output;
+        }
+
+        private static byte GalMul(byte a, byte b)
+        {
+            byte result = 0;
+            for (var i = 0; i < 8; i++)
+            {
+                if ((b & 1) == 1)
+                {
+                    result ^= a;
+                }
+
+                var hiBitSet = (byte)(a & 0x80);
+                a <<= 1;
+                if (hiBitSet == 0x80)
+                {
+                    a ^= 0x1b;
+                }
+
+                b >>= 1;
+            }
+
+            return result;
         }
     }
 }

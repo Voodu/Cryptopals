@@ -46,5 +46,20 @@ namespace Utilities
         {
             return new Readable(Encoding.ASCII.GetString(bytes));
         }
+
+        public static byte[] XOr(this byte[] bytes1, byte[] bytes2)
+        {
+            if (bytes1.Length != bytes2.Length)
+            {
+                throw new ArgumentException("Byte arrays must have the same length");
+            }
+            var retBytes = new byte[bytes1.Length];
+            for (var i = 0; i < bytes1.Length; i++)
+            {
+                retBytes[i] = (byte)(bytes1[i] ^ bytes2[i]);
+            }
+
+            return retBytes;
+        }
     }
 }
