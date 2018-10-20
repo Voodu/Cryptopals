@@ -36,7 +36,7 @@ namespace Utilities
             var retBytes = new byte[bytes.Length];
             for (var i = 0; i < bytes.Length; i++)
             {
-                retBytes[i] = (byte) (bytes[i] ^ key);
+                retBytes[i] = (byte)(bytes[i] ^ key);
             }
 
             return retBytes;
@@ -44,7 +44,7 @@ namespace Utilities
 
         public static Readable ToReadable(this byte[] bytes)
         {
-            return  new Readable(Encoding.ASCII.GetString(bytes));
+            return new Readable(Encoding.ASCII.GetString(bytes));
         }
     }
 }

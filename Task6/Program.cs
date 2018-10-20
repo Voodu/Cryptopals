@@ -14,7 +14,7 @@ namespace Task6
             const int maxKey = 40;
             const int precision = 1;
             var text = new B64
-                (File.ReadAllText(@"D:\OneDrive - Private\OneDrive\Dokumenty\Computer Science\V sem\ICTServices&Projects\Task6\data.txt")).GetBytes();
+                (File.ReadAllText(@"D:\VS17 projects\Cryptopals\Task6\data.txt")).GetBytes();
             var textSpan = new ReadOnlySpan<byte>(text);
             var keyGuesses = new List<KeySizeGuess>();
             for (var keysize = 2; keysize < maxKey + 1; keysize++)
@@ -111,17 +111,6 @@ namespace Task6
         public static int HammingDistance(byte c1, byte c2)
         {
             return (c1 ^ c2).SetBits();
-        }
-
-        public static string WriteChars(int howMany)
-        {
-            var sb = new StringBuilder();
-            for (var i = 0; i < howMany; i++)
-            {
-                sb.Append('x');
-            }
-
-            return sb.ToString();
         }
     }
 }

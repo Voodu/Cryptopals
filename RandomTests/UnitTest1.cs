@@ -21,15 +21,31 @@ namespace RandomTests
         [Fact]
         public void ShouldSth()
         {
-            var sliceSize = 5;
-            var text = new Readable("blockblockblockblockblock");
-            var textSpan = new Span<byte>(text.GetASCIIBytes());
-            var first = textSpan.Slice(0*sliceSize, sliceSize);
-            var second = textSpan.Slice(1*sliceSize, sliceSize);
-            var third = textSpan.Slice(2*sliceSize, sliceSize);
-            var fourth = textSpan.Slice(3*sliceSize, sliceSize);
+            //var result = GM
+            //Console.WriteLine(result);
+        }
 
-            Console.WriteLine(first.ToString(), second.ToString());
+        private byte GMul(byte a, byte b)
+        { // Galois Field (256) Multiplication of two Bytes
+            byte p = 0;
+
+            for (int counter = 0; counter < 8; counter++)
+            {
+                if ((b & 1) != 0)
+                {
+                    p ^= a;
+                }
+
+                bool hi_bit_set = (a & 0x80) != 0;
+                a <<= 1;
+                if (hi_bit_set)
+                {
+                    a ^= 0x1B; /* x^8 + x^4 + x^3 + x + 1 */
+                }
+                b >>= 1;
+            }
+
+            return p;
         }
     }
 }

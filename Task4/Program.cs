@@ -11,7 +11,7 @@ namespace Task4
         private static void Main(string[] args)
         {
             var hexStringList =
-                File.ReadAllLines(@"D:\OneDrive - Private\OneDrive\Dokumenty\Computer Science\V sem\ICTServices&Projects\Task4\data.txt").Select(l => new Hex(l)).ToList();
+                File.ReadAllLines(@"D:\VS17 projects\Cryptopals\Task4\data.txt").Select(l => new Hex(l)).ToList();
             var maxScore = 0D;
             var maxString = string.Empty;
             foreach (var hexString in hexStringList)
