@@ -5,17 +5,21 @@ using Utilities;
 
 namespace Task7
 {
-    internal class Program
+    public class Program
     {
         private static void Main(string[] args)
         {
             var cipherText = new B64(File.ReadAllText(@"D:\VS17 projects\Cryptopals\Task7\7.txt")).GetBytes();
             var key = new Readable("YELLOW SUBMARINE").GetASCIIBytes();
+            Console.WriteLine(Decrypt(cipherText, key));
+        }
 
+        public static string Decrypt(byte[] cipherText, byte[] key)
+        {
+            string plaintext = null;
             using (var aes = new AesManaged())
             {
                 aes.Key = key;
-                string plaintext = null;
                 aes.Mode = CipherMode.ECB;
                 aes.Padding = PaddingMode.Zeros;
 
@@ -32,8 +36,8 @@ namespace Task7
                     }
                 }
 
-                Console.WriteLine(plaintext);
             }
+            return plaintext;
         }
     }
 }
