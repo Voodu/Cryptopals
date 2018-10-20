@@ -17,19 +17,5 @@ namespace RandomTests
 
             Assert.Equal(expected, answer);
         }
-
-        [Fact]
-        public void ShouldSth()
-        {
-            var sliceSize = 5;
-            var text = new Readable("blockblockblockblockblock");
-            var textSpan = new Span<byte>(text.GetASCIIBytes());
-            var first = textSpan.Slice(0*sliceSize, sliceSize);
-            var second = textSpan.Slice(1*sliceSize, sliceSize);
-            var third = textSpan.Slice(2*sliceSize, sliceSize);
-            var fourth = textSpan.Slice(3*sliceSize, sliceSize);
-
-            Console.WriteLine(first.ToString(), second.ToString());
-        }
     }
 }

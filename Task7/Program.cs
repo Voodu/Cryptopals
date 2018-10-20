@@ -19,10 +19,8 @@ namespace Task7
                 aes.Mode = CipherMode.ECB;
                 aes.Padding = PaddingMode.Zeros;
 
-                // Create a decryptor to perform the stream transform.
                 var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 
-                // Create the streams used for decryption.
                 using (var msDecrypt = new MemoryStream(cipherText))
                 {
                     using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
