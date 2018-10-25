@@ -14,7 +14,7 @@ namespace Task6
             const int maxKey = 40;
             const int precision = 1;
             var text = new B64
-                (File.ReadAllText(@"D:\OneDrive - Private\OneDrive\Dokumenty\Computer Science\V sem\ICTServices&Projects\Task6\data.txt")).GetBytes();
+                (File.ReadAllText(@"..\..\..\data.txt")).GetBytes();
             var textSpan = new ReadOnlySpan<byte>(text);
             var keyGuesses = new List<KeySizeGuess>();
             for (var keysize = 2; keysize < maxKey + 1; keysize++)
@@ -37,14 +37,14 @@ namespace Task6
 
             keyGuesses.Sort((a, b) => a.Scoring.CompareTo(b.Scoring));
             var checkedKeys = keyGuesses.Take(5).ToList();
-            Console.WriteLine($"Checked key sizes: {string.Join(',', checkedKeys.Select(k => k.KeySize))}");
+            //Console.WriteLine($"Checked key sizes: {string.Join(',', checkedKeys.Select(k => k.KeySize))}");
 
             var readables = new List<Readable>();
             foreach (var checkedKey in checkedKeys)
             {
                 readables.Add(SolveCipherForKeysize(text, checkedKey));
             }
-
+            Console.WriteLine("Found text:");
             Console.WriteLine(readables.Aggregate((agg, next) => next.Scoring > agg.Scoring ? next : agg).String);
         }
 

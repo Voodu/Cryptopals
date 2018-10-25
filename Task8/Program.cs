@@ -10,7 +10,7 @@ namespace Task8
     {
         private static void Main(string[] args)
         {
-            var textLines = File.ReadAllLines(@"D:\VS17 projects\Cryptopals\Task8\data.txt")
+            var textLines = File.ReadAllLines(@"..\..\..\data.txt")
                                 .Select(s => new Hex(s).GetBytes()).ToList();
 
             (int ix, int score) best = (0, 0);

@@ -11,8 +11,8 @@ namespace Task1
             var hexString =
                 new
                     Hex("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d");
-            Console.WriteLine(hexString.ToB64().String);
-            Console.WriteLine(expected);
+            Console.WriteLine($"Converted: {hexString.ToB64().ToString()}");
+            Console.WriteLine($"Expected:  {expected}");
         }
     }
 }
